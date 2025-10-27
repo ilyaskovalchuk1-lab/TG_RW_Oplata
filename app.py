@@ -20,7 +20,7 @@ BASE_URL = os.getenv("BASE_URL", "https://web-production-f0a3.up.railway.app")
 
 @app.route("/")
 def index():
-    return "Бот работает! Версия Railway - Исправлена кодировка и EPay API"
+    return "Бот работает! Версия Railway - Исправлен EPay API (мин. сумма 1500 руб.)"
 
 @app.route("/callback", methods=["POST"])
 def epay_callback():
@@ -92,7 +92,7 @@ def handle_command(chat_id, command):
     if command == '/start':
         print("Sending start message")
         app.logger.info("Sending start message")
-        send_message(chat_id, "\u0423\u043a\u0430\u0436\u0438\u0442\u0435 \u043d\u0435\u043e\u0431\u0445\u043e\u0434\u0438\u043c\u0443\u044e \u0441\u0443\u043c\u043c\u0443 \u043e\u043f\u043b\u0430\u0442\u044b \u0432 \u0440\u0443\u0431.:")
+        send_message(chat_id, "\u0423\u043a\u0430\u0436\u0438\u0442\u0435 \u043d\u0435\u043e\u0431\u0445\u043e\u0434\u0438\u043c\u0443\u044e \u0441\u0443\u043c\u043c\u0443 \u043e\u043f\u043b\u0430\u0442\u044b \u0432 \u0440\u0443\u0431. (\u043c\u0438\u043d\u0438\u043c\u0443\u043c 1500 \u0440\u0443\u0431.):")
     
     elif command == '/payment':
         print("Sending payment message")
@@ -132,6 +132,13 @@ def handle_amount_input(chat_id, amount_text):
     
     try:
         amount = float(amount_text.replace(',', '.'))
+        
+        # Проверяем минимальную сумму
+        min_amount = 1500
+        if amount < min_amount:
+            send_message(chat_id, f"\u26a0\ufe0f \u041c\u0438\u043d\u0438\u043c\u0430\u043b\u044c\u043d\u0430\u044f \u0441\u0443\u043c\u043c\u0430 \u043e\u043f\u043b\u0430\u0442\u044b: {min_amount} \u0440\u0443\u0431. \u0411\u0443\u0434\u0435\u0442 \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u043d\u0430 \u0441\u0443\u043c\u043c\u0430 {min_amount} \u0440\u0443\u0431.")
+            amount = min_amount
+        
         send_message(chat_id, "\u23f3 \u041e\u0436\u0438\u0434\u0430\u0435\u043c \u0440\u0435\u043a\u0432\u0438\u0437\u0438\u0442\u044b...")
         
         payment_data = get_payment_credentials_from_epay(amount)
@@ -146,7 +153,7 @@ def handle_amount_input(chat_id, amount_text):
             send_message(chat_id, f"\u274c \u041e\u0448\u0438\u0431\u043a\u0430! {error_msg}")
             
     except ValueError:
-        send_message(chat_id, "\u274c \u041f\u043e\u0436\u0430\u043b\u0443\u0439\u0441\u0442\u0430, \u0432\u0432\u0435\u0434\u0438\u0442\u0435 \u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u0443\u044e \u0441\u0443\u043c\u043c\u0443 (\u043d\u0430\u043f\u0440\u0438\u043c\u0435\u0440: 1000 \u0438\u043b\u0438 1000.50)")
+        send_message(chat_id, "\u274c \u041f\u043e\u0436\u0430\u043b\u0443\u0439\u0441\u0442\u0430, \u0432\u0432\u0435\u0434\u0438\u0442\u0435 \u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u0443\u044e \u0441\u0443\u043c\u043c\u0443 (\u043d\u0430\u043f\u0440\u0438\u043c\u0435\u0440: 1500 \u0438\u043b\u0438 2000.50)")
     except Exception as e:
         app.logger.error(f"Error handling amount input: {e}")
         send_message(chat_id, "\u274c \u041f\u0440\u043e\u0438\u0437\u043e\u0448\u043b\u0430 \u043e\u0448\u0438\u0431\u043a\u0430. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0435\u0449\u0435 \u0440\u0430\u0437.")
@@ -191,31 +198,41 @@ def save_order_to_file(payment_data, chat_id, amount):
     except Exception as e:
         app.logger.error(f"Error saving order to file: {e}")
 
-def get_payment_credentials_from_epay(amount=None):
-    if not EPAY_API_KEY:
-        app.logger.warning("EPAY API key not configured")
-        return None
-    
-    try:
-        data = {
-            'amount': str(amount) if amount else '1000',
-            'merchant_order_id': 'optional',
-            'api_key': EPAY_API_KEY,
-            'notice_url': f"{BASE_URL}/callback"
-        }
-        
-        response = requests.post(EPAY_API_URL, data=data, timeout=30)
-        app.logger.info(f"EPay API response: {response.status_code} - {response.text}")
-        
-        if response.status_code == 200:
-            return response.json()
-        else:
-            app.logger.error(f"EPAY API error: {response.status_code} - {response.text}")
+    def get_payment_credentials_from_epay(amount=None):
+        if not EPAY_API_KEY:
+            app.logger.warning("EPAY API key not configured")
             return None
+
+        try:
+            # Минимальная сумма 1500 рублей согласно API
+            min_amount = 1500
+            actual_amount = max(min_amount, amount) if amount else min_amount
             
-    except requests.exceptions.RequestException as e:
-        app.logger.error(f"EPAY API request failed: {e}")
-        return None
+            data = {
+                'amount': str(actual_amount),
+                'merchant_order_id': 'optional',
+                'api_key': EPAY_API_KEY,
+                'notice_url': f"{BASE_URL}/callback",
+                'success_url': f"{BASE_URL}/success",
+                'fail_url': f"{BASE_URL}/fail"
+            }
+            app.logger.info(f"Requesting EPAY API with data: {data}")
+            response = requests.post(
+                EPAY_API_URL,
+                data=data,
+                timeout=30
+            )
+
+            if response.status_code == 200:
+                app.logger.info(f"EPAY API response: {response.text}")
+                return response.json()
+            else:
+                app.logger.error(f"EPAY API error: {response.status_code} - {response.text}")
+                return None
+
+        except requests.exceptions.RequestException as e:
+            app.logger.error(f"EPAY API request failed: {e}")
+            return None
 
 def format_payment_credentials_from_epay(payment_data):
     try:
