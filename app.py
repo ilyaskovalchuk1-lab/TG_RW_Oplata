@@ -20,7 +20,7 @@ BASE_URL = os.getenv("BASE_URL", "https://web-production-f0a3.up.railway.app")
 
 @app.route("/")
 def index():
-    return "Бот работает! Версия Railway - Максимальное логирование для диагностики"
+    return "Бот работает! Версия Railway - Супер детальное логирование"
 
 @app.route("/callback", methods=["POST"])
 def epay_callback():
@@ -129,6 +129,8 @@ def handle_command(chat_id, command):
 def handle_amount_input(chat_id, amount_text):
     print(f"Amount input handler: {amount_text}")
     app.logger.info(f"Amount input handler: {amount_text}")
+    app.logger.info(f"=== STARTING handle_amount_input ===")
+    app.logger.info(f"Chat ID: {chat_id}, Amount text: {amount_text}")
     
     try:
         amount = float(amount_text.replace(',', '.'))
@@ -140,6 +142,11 @@ def handle_amount_input(chat_id, amount_text):
             amount = min_amount
         
         send_message(chat_id, "\u23f3 \u041e\u0436\u0438\u0434\u0430\u0435\u043c \u0440\u0435\u043a\u0432\u0438\u0437\u0438\u0442\u044b...")
+        
+        app.logger.info(f"=== AFTER SENDING WAITING MESSAGE ===")
+        app.logger.info(f"About to start EPay API call with amount: {amount}")
+        app.logger.info(f"Amount type: {type(amount)}")
+        app.logger.info(f"Amount value: {amount}")
         
         app.logger.info(f"=== STARTING EPay API CALL ===")
         app.logger.info(f"Calling get_payment_credentials_from_epay with amount: {amount}")
