@@ -3,6 +3,7 @@ import os
 import sys
 import requests
 import json
+import time
 from flask import Flask, request
 
 # Настройка кодировки для Railway
@@ -20,7 +21,7 @@ BASE_URL = os.getenv("BASE_URL", "https://web-production-f0a3.up.railway.app")
 
 @app.route("/")
 def index():
-    return "Бот работает! Версия Railway - Супер детальное логирование"
+    return "Бот работает! Версия Railway - ТЕСТ ОБНОВЛЕНИЯ КОДА - " + str(int(time.time()))
 
 @app.route("/callback", methods=["POST"])
 def epay_callback():
