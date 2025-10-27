@@ -20,7 +20,7 @@ BASE_URL = os.getenv("BASE_URL", "https://web-production-f0a3.up.railway.app")
 
 @app.route("/")
 def index():
-    return "Бот работает! Версия Railway - Исправлен EPay API (мин. сумма 1500 руб.)"
+    return "Бот работает! Версия Railway - Исправлена функция EPay API"
 
 @app.route("/callback", methods=["POST"])
 def epay_callback():
@@ -198,41 +198,41 @@ def save_order_to_file(payment_data, chat_id, amount):
     except Exception as e:
         app.logger.error(f"Error saving order to file: {e}")
 
-    def get_payment_credentials_from_epay(amount=None):
-        if not EPAY_API_KEY:
-            app.logger.warning("EPAY API key not configured")
+def get_payment_credentials_from_epay(amount=None):
+    if not EPAY_API_KEY:
+        app.logger.warning("EPAY API key not configured")
+        return None
+
+    try:
+        # Минимальная сумма 1500 рублей согласно API
+        min_amount = 1500
+        actual_amount = max(min_amount, amount) if amount else min_amount
+        
+        data = {
+            'amount': str(actual_amount),
+            'merchant_order_id': 'optional',
+            'api_key': EPAY_API_KEY,
+            'notice_url': f"{BASE_URL}/callback",
+            'success_url': f"{BASE_URL}/success",
+            'fail_url': f"{BASE_URL}/fail"
+        }
+        app.logger.info(f"Requesting EPAY API with data: {data}")
+        response = requests.post(
+            EPAY_API_URL,
+            data=data,
+            timeout=30
+        )
+
+        if response.status_code == 200:
+            app.logger.info(f"EPAY API response: {response.text}")
+            return response.json()
+        else:
+            app.logger.error(f"EPAY API error: {response.status_code} - {response.text}")
             return None
 
-        try:
-            # Минимальная сумма 1500 рублей согласно API
-            min_amount = 1500
-            actual_amount = max(min_amount, amount) if amount else min_amount
-            
-            data = {
-                'amount': str(actual_amount),
-                'merchant_order_id': 'optional',
-                'api_key': EPAY_API_KEY,
-                'notice_url': f"{BASE_URL}/callback",
-                'success_url': f"{BASE_URL}/success",
-                'fail_url': f"{BASE_URL}/fail"
-            }
-            app.logger.info(f"Requesting EPAY API with data: {data}")
-            response = requests.post(
-                EPAY_API_URL,
-                data=data,
-                timeout=30
-            )
-
-            if response.status_code == 200:
-                app.logger.info(f"EPAY API response: {response.text}")
-                return response.json()
-            else:
-                app.logger.error(f"EPAY API error: {response.status_code} - {response.text}")
-                return None
-
-        except requests.exceptions.RequestException as e:
-            app.logger.error(f"EPAY API request failed: {e}")
-            return None
+    except requests.exceptions.RequestException as e:
+        app.logger.error(f"EPAY API request failed: {e}")
+        return None
 
 def format_payment_credentials_from_epay(payment_data):
     try:
