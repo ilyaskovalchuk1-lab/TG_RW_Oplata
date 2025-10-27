@@ -20,7 +20,7 @@ BASE_URL = os.getenv("BASE_URL", "https://web-production-f0a3.up.railway.app")
 
 @app.route("/")
 def index():
-    return "Бот работает! Версия Railway - Добавлено детальное логирование EPay API"
+    return "Бот работает! Версия Railway - Максимальное логирование для диагностики"
 
 @app.route("/callback", methods=["POST"])
 def epay_callback():
@@ -141,14 +141,20 @@ def handle_amount_input(chat_id, amount_text):
         
         send_message(chat_id, "\u23f3 \u041e\u0436\u0438\u0434\u0430\u0435\u043c \u0440\u0435\u043a\u0432\u0438\u0437\u0438\u0442\u044b...")
         
+        app.logger.info(f"=== STARTING EPay API CALL ===")
         app.logger.info(f"Calling get_payment_credentials_from_epay with amount: {amount}")
+        app.logger.info(f"Amount type: {type(amount)}")
+        
         try:
             payment_data = get_payment_credentials_from_epay(amount)
+            app.logger.info(f"EPay API call completed successfully")
         except Exception as e:
             app.logger.error(f"Error calling get_payment_credentials_from_epay: {e}")
+            app.logger.error(f"Exception type: {type(e)}")
             payment_data = None
         
         app.logger.info(f"Payment data received: {payment_data}")
+        app.logger.info(f"=== EPay API CALL FINISHED ===")
         
         if payment_data and not payment_data.get('error_desc'):
             try:
@@ -161,13 +167,19 @@ def handle_amount_input(chat_id, amount_text):
             send_message(chat_id, payment_text)
             send_message(chat_id, "\u23f0 \u041d\u0430 \u043e\u043f\u043b\u0430\u0442\u0443 \u0434\u0430\u0435\u0442\u0441\u044f 20 \u043c\u0438\u043d\u0443\u0442, \u043f\u043e\u0441\u043b\u0435 \u0447\u0435\u0433\u043e \u0441\u0441\u044b\u043b\u043a\u0430 \u0431\u0443\u0434\u0435\u0442 \u043d\u0435\u0430\u043a\u0442\u0438\u0432\u043d\u0430")
         else:
+            app.logger.info(f"Payment data is None or has error_desc: {payment_data}")
             error_msg = payment_data.get('error_desc', '\u041e\u0448\u0438\u0431\u043a\u0430 \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u0438\u044f \u0440\u0435\u043a\u0432\u0438\u0437\u0438\u0442\u043e\u0432') if payment_data else '\u041e\u0448\u0438\u0431\u043a\u0430 \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u0438\u044f \u0440\u0435\u043a\u0432\u0438\u0437\u0438\u0442\u043e\u0432'
+            app.logger.info(f"Sending error message: {error_msg}")
             send_message(chat_id, f"\u274c \u041e\u0448\u0438\u0431\u043a\u0430! {error_msg}")
             
     except ValueError:
         send_message(chat_id, "\u274c \u041f\u043e\u0436\u0430\u043b\u0443\u0439\u0441\u0442\u0430, \u0432\u0432\u0435\u0434\u0438\u0442\u0435 \u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u0443\u044e \u0441\u0443\u043c\u043c\u0443 (\u043d\u0430\u043f\u0440\u0438\u043c\u0435\u0440: 1500 \u0438\u043b\u0438 2500)")
     except Exception as e:
         app.logger.error(f"Error handling amount input: {e}")
+        app.logger.error(f"Exception type: {type(e)}")
+        app.logger.error(f"Exception args: {e.args}")
+        import traceback
+        app.logger.error(f"Traceback: {traceback.format_exc()}")
         send_message(chat_id, "\u274c \u041f\u0440\u043e\u0438\u0437\u043e\u0448\u043b\u0430 \u043e\u0448\u0438\u0431\u043a\u0430. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0435\u0449\u0435 \u0440\u0430\u0437.")
 
 def send_message(chat_id, text):
