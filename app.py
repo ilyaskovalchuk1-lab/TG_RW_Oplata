@@ -4,10 +4,14 @@ import sys
 import requests
 import json
 import time
+import logging
 from flask import Flask, request
 
 # Настройка кодировки для Railway
 os.environ.setdefault('PYTHONIOENCODING', 'utf-8')
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 app = Flask(__name__)
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -21,7 +25,7 @@ BASE_URL = os.getenv("BASE_URL", "https://web-production-f0a3.up.railway.app")
 
 @app.route("/")
 def index():
-    return "Бот работает! Версия Railway - СУПЕР МАКСИМАЛЬНОЕ ЛОГИРОВАНИЕ - " + str(int(time.time()))
+    return "Бот работает! Версия Railway - ИСПРАВЛЕНА КОНФИГУРАЦИЯ - " + str(int(time.time()))
 
 @app.route("/callback", methods=["POST"])
 def epay_callback():
