@@ -21,7 +21,7 @@ BASE_URL = os.getenv("BASE_URL", "https://web-production-f0a3.up.railway.app")
 
 @app.route("/")
 def index():
-    return "Бот работает! Версия Railway - ТЕСТ ОБНОВЛЕНИЯ КОДА - " + str(int(time.time()))
+    return "Бот работает! Версия Railway - МАКСИМАЛЬНОЕ ЛОГИРОВАНИЕ - " + str(int(time.time()))
 
 @app.route("/callback", methods=["POST"])
 def epay_callback():
@@ -132,17 +132,24 @@ def handle_amount_input(chat_id, amount_text):
     app.logger.info(f"Amount input handler: {amount_text}")
     app.logger.info(f"=== STARTING handle_amount_input ===")
     app.logger.info(f"Chat ID: {chat_id}, Amount text: {amount_text}")
+    app.logger.info(f"Function called successfully")
     
     try:
+        app.logger.info(f"About to convert amount: {amount_text}")
         amount = float(amount_text.replace(',', '.'))
+        app.logger.info(f"Amount converted successfully: {amount}")
         
         # Проверяем минимальную сумму
         min_amount = 1500
+        app.logger.info(f"Checking minimum amount: {amount} >= {min_amount}")
         if amount < min_amount:
+            app.logger.info(f"Amount is less than minimum, adjusting to {min_amount}")
             send_message(chat_id, f"\u26a0\ufe0f \u041c\u0438\u043d\u0438\u043c\u0430\u043b\u044c\u043d\u0430\u044f \u0441\u0443\u043c\u043c\u0430 \u043e\u043f\u043b\u0430\u0442\u044b: {min_amount} \u0440\u0443\u0431. \u0411\u0443\u0434\u0435\u0442 \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u043d\u0430 \u0441\u0443\u043c\u043c\u0430 {min_amount} \u0440\u0443\u0431.")
             amount = min_amount
         
+        app.logger.info(f"About to send waiting message")
         send_message(chat_id, "\u23f3 \u041e\u0436\u0438\u0434\u0430\u0435\u043c \u0440\u0435\u043a\u0432\u0438\u0437\u0438\u0442\u044b...")
+        app.logger.info(f"Waiting message sent successfully")
         
         app.logger.info(f"=== AFTER SENDING WAITING MESSAGE ===")
         app.logger.info(f"About to start EPay API call with amount: {amount}")
