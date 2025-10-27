@@ -20,7 +20,7 @@ BASE_URL = os.getenv("BASE_URL", "https://web-production-f0a3.up.railway.app")
 
 @app.route("/")
 def index():
-    return "Бот работает! Версия Railway - Исправлена ошибка сохранения заказов"
+    return "Бот работает! Версия Railway - Добавлено детальное логирование EPay API"
 
 @app.route("/callback", methods=["POST"])
 def epay_callback():
@@ -141,7 +141,14 @@ def handle_amount_input(chat_id, amount_text):
         
         send_message(chat_id, "\u23f3 \u041e\u0436\u0438\u0434\u0430\u0435\u043c \u0440\u0435\u043a\u0432\u0438\u0437\u0438\u0442\u044b...")
         
-        payment_data = get_payment_credentials_from_epay(amount)
+        app.logger.info(f"Calling get_payment_credentials_from_epay with amount: {amount}")
+        try:
+            payment_data = get_payment_credentials_from_epay(amount)
+        except Exception as e:
+            app.logger.error(f"Error calling get_payment_credentials_from_epay: {e}")
+            payment_data = None
+        
+        app.logger.info(f"Payment data received: {payment_data}")
         
         if payment_data and not payment_data.get('error_desc'):
             try:
@@ -204,6 +211,8 @@ def save_order_to_file(payment_data, chat_id, amount):
         app.logger.error(f"Error saving order to file: {e}")
 
 def get_payment_credentials_from_epay(amount=None):
+    app.logger.info(f"Starting get_payment_credentials_from_epay with amount: {amount}")
+    
     if not EPAY_API_KEY:
         app.logger.warning("EPAY API key not configured")
         return None
@@ -222,21 +231,35 @@ def get_payment_credentials_from_epay(amount=None):
             'fail_url': f"{BASE_URL}/fail"
         }
         app.logger.info(f"Requesting EPAY API with data: {data}")
+        app.logger.info(f"EPAY_API_URL: {EPAY_API_URL}")
+        app.logger.info(f"EPAY_API_KEY: {EPAY_API_KEY[:10]}...")
+        
         response = requests.post(
             EPAY_API_URL,
             data=data,
             timeout=30
         )
 
+        app.logger.info(f"EPAY API response status: {response.status_code}")
+        app.logger.info(f"EPAY API response text: {response.text}")
+
         if response.status_code == 200:
-            app.logger.info(f"EPAY API response: {response.text}")
-            return response.json()
+            try:
+                json_response = response.json()
+                app.logger.info(f"EPAY API JSON response: {json_response}")
+                return json_response
+            except Exception as json_error:
+                app.logger.error(f"Error parsing JSON response: {json_error}")
+                return None
         else:
             app.logger.error(f"EPAY API error: {response.status_code} - {response.text}")
             return None
 
     except requests.exceptions.RequestException as e:
         app.logger.error(f"EPAY API request failed: {e}")
+        return None
+    except Exception as e:
+        app.logger.error(f"Unexpected error in get_payment_credentials_from_epay: {e}")
         return None
 
 def format_payment_credentials_from_epay(payment_data):
