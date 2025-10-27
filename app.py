@@ -21,7 +21,7 @@ BASE_URL = os.getenv("BASE_URL", "https://web-production-f0a3.up.railway.app")
 
 @app.route("/")
 def index():
-    return "Бот работает! Версия Railway - МАКСИМАЛЬНОЕ ЛОГИРОВАНИЕ - " + str(int(time.time()))
+    return "Бот работает! Версия Railway - СУПЕР МАКСИМАЛЬНОЕ ЛОГИРОВАНИЕ - " + str(int(time.time()))
 
 @app.route("/callback", methods=["POST"])
 def epay_callback():
@@ -133,8 +133,10 @@ def handle_amount_input(chat_id, amount_text):
     app.logger.info(f"=== STARTING handle_amount_input ===")
     app.logger.info(f"Chat ID: {chat_id}, Amount text: {amount_text}")
     app.logger.info(f"Function called successfully")
+    app.logger.info(f"About to start try block")
     
     try:
+        app.logger.info(f"Inside try block")
         app.logger.info(f"About to convert amount: {amount_text}")
         amount = float(amount_text.replace(',', '.'))
         app.logger.info(f"Amount converted successfully: {amount}")
