@@ -25,7 +25,7 @@ BASE_URL = os.getenv("BASE_URL", "https://web-production-f0a3.up.railway.app")
 
 @app.route("/")
 def index():
-    return "Бот работает! Версия Railway - ДИАГНОСТИКА ОБРАБОТКИ РЕКВИЗИТОВ - " + str(int(time.time()))
+    return "Бот работает! Версия Railway - ИСПРАВЛЕНА ОТПРАВКА РЕКВИЗИТОВ - " + str(int(time.time()))
 
 @app.route("/callback", methods=["POST"])
 def epay_callback():
@@ -192,12 +192,24 @@ def handle_amount_input(chat_id, amount_text):
             app.logger.info(f"Payment text formatted: {payment_text[:100]}...")
             
             app.logger.info(f"About to send payment text")
-            send_message(chat_id, payment_text)
-            app.logger.info(f"Payment text sent successfully")
+            try:
+                send_message(chat_id, payment_text)
+                app.logger.info(f"Payment text sent successfully")
+            except Exception as e:
+                app.logger.error(f"Error sending payment text: {e}")
+                app.logger.error(f"Exception type: {type(e)}")
+                import traceback
+                app.logger.error(f"Traceback: {traceback.format_exc()}")
             
             app.logger.info(f"About to send timeout message")
-            send_message(chat_id, "\u23f0 \u041d\u0430 \u043e\u043f\u043b\u0430\u0442\u0443 \u0434\u0430\u0435\u0442\u0441\u044f 20 \u043c\u0438\u043d\u0443\u0442, \u043f\u043e\u0441\u043b\u0435 \u0447\u0435\u0433\u043e \u0441\u0441\u044b\u043b\u043a\u0430 \u0431\u0443\u0434\u0435\u0442 \u043d\u0435\u0430\u043a\u0442\u0438\u0432\u043d\u0430")
-            app.logger.info(f"Timeout message sent successfully")
+            try:
+                send_message(chat_id, "\u23f0 \u041d\u0430 \u043e\u043f\u043b\u0430\u0442\u0443 \u0434\u0430\u0435\u0442\u0441\u044f 20 \u043c\u0438\u043d\u0443\u0442, \u043f\u043e\u0441\u043b\u0435 \u0447\u0435\u0433\u043e \u0441\u0441\u044b\u043b\u043a\u0430 \u0431\u0443\u0434\u0435\u0442 \u043d\u0435\u0430\u043a\u0442\u0438\u0432\u043d\u0430")
+                app.logger.info(f"Timeout message sent successfully")
+            except Exception as e:
+                app.logger.error(f"Error sending timeout message: {e}")
+                app.logger.error(f"Exception type: {type(e)}")
+                import traceback
+                app.logger.error(f"Traceback: {traceback.format_exc()}")
         else:
             app.logger.info(f"Payment data is None or has error_desc: {payment_data}")
             error_msg = payment_data.get('error_desc', '\u041e\u0448\u0438\u0431\u043a\u0430 \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u0438\u044f \u0440\u0435\u043a\u0432\u0438\u0437\u0438\u0442\u043e\u0432') if payment_data else '\u041e\u0448\u0438\u0431\u043a\u0430 \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u0438\u044f \u0440\u0435\u043a\u0432\u0438\u0437\u0438\u0442\u043e\u0432'
