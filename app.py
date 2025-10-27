@@ -20,7 +20,7 @@ BASE_URL = os.getenv("BASE_URL", "https://web-production-f0a3.up.railway.app")
 
 @app.route("/")
 def index():
-    return "Бот работает! Версия Railway - Исправлена функция EPay API"
+    return "Бот работает! Версия Railway - Исправлена ошибка сохранения заказов"
 
 @app.route("/callback", methods=["POST"])
 def epay_callback():
@@ -144,7 +144,12 @@ def handle_amount_input(chat_id, amount_text):
         payment_data = get_payment_credentials_from_epay(amount)
         
         if payment_data and not payment_data.get('error_desc'):
-            save_order_to_file(payment_data, chat_id, amount)
+            try:
+                save_order_to_file(payment_data, chat_id, amount)
+            except Exception as e:
+                app.logger.error(f"Error saving order to file: {e}")
+                # Продолжаем выполнение, даже если не удалось сохранить заказ
+            
             payment_text = format_payment_credentials_from_epay(payment_data)
             send_message(chat_id, payment_text)
             send_message(chat_id, "\u23f0 \u041d\u0430 \u043e\u043f\u043b\u0430\u0442\u0443 \u0434\u0430\u0435\u0442\u0441\u044f 20 \u043c\u0438\u043d\u0443\u0442, \u043f\u043e\u0441\u043b\u0435 \u0447\u0435\u0433\u043e \u0441\u0441\u044b\u043b\u043a\u0430 \u0431\u0443\u0434\u0435\u0442 \u043d\u0435\u0430\u043a\u0442\u0438\u0432\u043d\u0430")
@@ -153,7 +158,7 @@ def handle_amount_input(chat_id, amount_text):
             send_message(chat_id, f"\u274c \u041e\u0448\u0438\u0431\u043a\u0430! {error_msg}")
             
     except ValueError:
-        send_message(chat_id, "\u274c \u041f\u043e\u0436\u0430\u043b\u0443\u0439\u0441\u0442\u0430, \u0432\u0432\u0435\u0434\u0438\u0442\u0435 \u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u0443\u044e \u0441\u0443\u043c\u043c\u0443 (\u043d\u0430\u043f\u0440\u0438\u043c\u0435\u0440: 1500 \u0438\u043b\u0438 2000.50)")
+        send_message(chat_id, "\u274c \u041f\u043e\u0436\u0430\u043b\u0443\u0439\u0441\u0442\u0430, \u0432\u0432\u0435\u0434\u0438\u0442\u0435 \u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u0443\u044e \u0441\u0443\u043c\u043c\u0443 (\u043d\u0430\u043f\u0440\u0438\u043c\u0435\u0440: 1500 \u0438\u043b\u0438 2500)")
     except Exception as e:
         app.logger.error(f"Error handling amount input: {e}")
         send_message(chat_id, "\u274c \u041f\u0440\u043e\u0438\u0437\u043e\u0448\u043b\u0430 \u043e\u0448\u0438\u0431\u043a\u0430. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0435\u0449\u0435 \u0440\u0430\u0437.")
@@ -187,7 +192,7 @@ def save_order_to_file(payment_data, chat_id, amount):
         from datetime import datetime
         order_data = [
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            payment_data.get('order_id', 'N/A'),
+            str(payment_data.get('order_id', 'N/A')),
             str(chat_id),
             str(amount)
         ]
