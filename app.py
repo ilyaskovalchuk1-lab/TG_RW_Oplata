@@ -25,7 +25,7 @@ BASE_URL = os.getenv("BASE_URL", "https://web-production-f0a3.up.railway.app")
 
 @app.route("/")
 def index():
-    return "Бот работает! Версия Railway - ИСПРАВЛЕНА ОТПРАВКА РЕКВИЗИТОВ - " + str(int(time.time()))
+    return "Бот работает! Версия Railway - ИСПРАВЛЕНА КОДИРОВКА РЕКВИЗИТОВ - " + str(int(time.time()))
 
 @app.route("/callback", methods=["POST"])
 def epay_callback():
@@ -227,8 +227,8 @@ def handle_amount_input(chat_id, amount_text):
         send_message(chat_id, "\u274c \u041f\u0440\u043e\u0438\u0437\u043e\u0448\u043b\u0430 \u043e\u0448\u0438\u0431\u043a\u0430. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0435\u0449\u0435 \u0440\u0430\u0437.")
 
 def send_message(chat_id, text):
-    print(f"Sending message to {chat_id}: {text}")
-    app.logger.info(f"Sending message to {chat_id}: {text}")
+    app.logger.info(f"Sending message to {chat_id}: message length {len(text)}")
+    app.logger.info(f"Text bytes length: {len(text.encode('utf-8', errors='ignore'))}")
     
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
     
@@ -240,14 +240,11 @@ def send_message(chat_id, text):
     
     try:
         response = requests.post(url, json=data, timeout=10)
-        print(f"Telegram API response: {response.status_code}")
         app.logger.info(f"Telegram API response: {response.status_code}")
         
         if response.status_code != 200:
-            print(f"Telegram API error: {response.text}")
             app.logger.error(f"Telegram API error: {response.text}")
     except Exception as e:
-        print(f"Error sending message: {e}")
         app.logger.error(f"Error sending message: {e}")
 
 def save_order_to_file(payment_data, chat_id, amount):
