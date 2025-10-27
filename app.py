@@ -25,7 +25,7 @@ BASE_URL = os.getenv("BASE_URL", "https://web-production-f0a3.up.railway.app")
 
 @app.route("/")
 def index():
-    return "Бот работает! Версия Railway - ИСПРАВЛЕНА КОДИРОВКА РЕКВИЗИТОВ - " + str(int(time.time()))
+    return "Бот работает! Версия Railway - СОВРЕМЕННЫЙ ИНТЕРФЕЙС - " + str(int(time.time()))
 
 @app.route("/callback", methods=["POST"])
 def epay_callback():
@@ -97,7 +97,7 @@ def handle_command(chat_id, command):
     if command == '/start':
         print("Sending start message")
         app.logger.info("Sending start message")
-        send_message(chat_id, "\u0423\u043a\u0430\u0436\u0438\u0442\u0435 \u043d\u0435\u043e\u0431\u0445\u043e\u0434\u0438\u043c\u0443\u044e \u0441\u0443\u043c\u043c\u0443 \u043e\u043f\u043b\u0430\u0442\u044b \u0432 \u0440\u0443\u0431. (\u043c\u0438\u043d\u0438\u043c\u0443\u043c 1500 \u0440\u0443\u0431.):")
+        send_message_with_cleanup(chat_id, "\u0423\u043a\u0430\u0436\u0438\u0442\u0435 \u043d\u0435\u043e\u0431\u0445\u043e\u0434\u0438\u043c\u0443\u044e \u0441\u0443\u043c\u043c\u0443 \u043e\u043f\u043b\u0430\u0442\u044b \u0432 \u0440\u0443\u0431. (\u043c\u0438\u043d\u0438\u043c\u0443\u043c 1500 \u0440\u0443\u0431.):")
     
     elif command == '/payment':
         print("Sending payment message")
@@ -109,10 +109,10 @@ def handle_command(chat_id, command):
             else:
                 payment_text = get_static_payment_credentials()
             
-            send_message(chat_id, payment_text)
+            send_message_with_cleanup(chat_id, payment_text)
         except Exception as e:
             app.logger.error(f"Error getting payment credentials: {e}")
-            send_message(chat_id, get_static_payment_credentials())
+            send_message_with_cleanup(chat_id, get_static_payment_credentials())
     
     elif command == '/help':
         print("Sending help message")
@@ -124,12 +124,12 @@ def handle_command(chat_id, command):
 /help - \u041f\u043e\u043a\u0430\u0437\u0430\u0442\u044c \u044d\u0442\u043e \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435
 
 \u0415\u0441\u043b\u0438 \u0443 \u0432\u0430\u0441 \u0435\u0441\u0442\u044c \u0432\u043e\u043f\u0440\u043e\u0441\u044b, \u043e\u0431\u0440\u0430\u0442\u0438\u0442\u0435\u0441\u044c \u043a \u0430\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0430\u0442\u043e\u0440\u0443."""
-        send_message(chat_id, help_text)
+        send_message_with_cleanup(chat_id, help_text)
     
     else:
         print("Unknown command")
         app.logger.info("Unknown command")
-        send_message(chat_id, "\u274c \u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u0430\u044f \u043a\u043e\u043c\u0430\u043d\u0434\u0430. \u0418\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0439\u0442\u0435 /help \u0434\u043b\u044f \u0441\u043f\u0438\u0441\u043a\u0430 \u043a\u043e\u043c\u0430\u043d\u0434.")
+        send_message_with_cleanup(chat_id, "\u274c \u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u0430\u044f \u043a\u043e\u043c\u0430\u043d\u0434\u0430. \u0418\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0439\u0442\u0435 /help \u0434\u043b\u044f \u0441\u043f\u0438\u0441\u043a\u0430 \u043a\u043e\u043c\u0430\u043d\u0434.")
 
 def handle_amount_input(chat_id, amount_text):
     print(f"Amount input handler: {amount_text}")
@@ -150,11 +150,11 @@ def handle_amount_input(chat_id, amount_text):
         app.logger.info(f"Checking minimum amount: {amount} >= {min_amount}")
         if amount < min_amount:
             app.logger.info(f"Amount is less than minimum, adjusting to {min_amount}")
-            send_message(chat_id, f"\u26a0\ufe0f \u041c\u0438\u043d\u0438\u043c\u0430\u043b\u044c\u043d\u0430\u044f \u0441\u0443\u043c\u043c\u0430 \u043e\u043f\u043b\u0430\u0442\u044b: {min_amount} \u0440\u0443\u0431. \u0411\u0443\u0434\u0435\u0442 \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u043d\u0430 \u0441\u0443\u043c\u043c\u0430 {min_amount} \u0440\u0443\u0431.")
+            send_message_with_cleanup(chat_id, f"\u26a0\ufe0f \u041c\u0438\u043d\u0438\u043c\u0430\u043b\u044c\u043d\u0430\u044f \u0441\u0443\u043c\u043c\u0430 \u043e\u043f\u043b\u0430\u0442\u044b: {min_amount} \u0440\u0443\u0431. \u0411\u0443\u0434\u0435\u0442 \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u043d\u0430 \u0441\u0443\u043c\u043c\u0430 {min_amount} \u0440\u0443\u0431.")
             amount = min_amount
         
         app.logger.info(f"About to send waiting message")
-        send_message(chat_id, "\u23f3 \u041e\u0436\u0438\u0434\u0430\u0435\u043c \u0440\u0435\u043a\u0432\u0438\u0437\u0438\u0442\u044b...")
+        send_message_with_cleanup(chat_id, "\u23f3 \u041e\u0436\u0438\u0434\u0430\u0435\u043c \u0440\u0435\u043a\u0432\u0438\u0437\u0438\u0442\u044b...")
         app.logger.info(f"Waiting message sent successfully")
         
         app.logger.info(f"=== AFTER SENDING WAITING MESSAGE ===")
@@ -193,7 +193,7 @@ def handle_amount_input(chat_id, amount_text):
             
             app.logger.info(f"About to send payment text")
             try:
-                send_message(chat_id, payment_text)
+                send_message_with_cleanup(chat_id, payment_text)
                 app.logger.info(f"Payment text sent successfully")
             except Exception as e:
                 app.logger.error(f"Error sending payment text: {e}")
@@ -203,7 +203,7 @@ def handle_amount_input(chat_id, amount_text):
             
             app.logger.info(f"About to send timeout message")
             try:
-                send_message(chat_id, "\u23f0 \u041d\u0430 \u043e\u043f\u043b\u0430\u0442\u0443 \u0434\u0430\u0435\u0442\u0441\u044f 20 \u043c\u0438\u043d\u0443\u0442, \u043f\u043e\u0441\u043b\u0435 \u0447\u0435\u0433\u043e \u0441\u0441\u044b\u043b\u043a\u0430 \u0431\u0443\u0434\u0435\u0442 \u043d\u0435\u0430\u043a\u0442\u0438\u0432\u043d\u0430")
+                send_message_with_cleanup(chat_id, "\u23f0 \u041d\u0430 \u043e\u043f\u043b\u0430\u0442\u0443 \u0434\u0430\u0435\u0442\u0441\u044f 20 \u043c\u0438\u043d\u0443\u0442, \u043f\u043e\u0441\u043b\u0435 \u0447\u0435\u0433\u043e \u0441\u0441\u044b\u043b\u043a\u0430 \u0431\u0443\u0434\u0435\u0442 \u043d\u0435\u0430\u043a\u0442\u0438\u0432\u043d\u0430")
                 app.logger.info(f"Timeout message sent successfully")
             except Exception as e:
                 app.logger.error(f"Error sending timeout message: {e}")
@@ -214,17 +214,17 @@ def handle_amount_input(chat_id, amount_text):
             app.logger.info(f"Payment data is None or has error_desc: {payment_data}")
             error_msg = payment_data.get('error_desc', '\u041e\u0448\u0438\u0431\u043a\u0430 \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u0438\u044f \u0440\u0435\u043a\u0432\u0438\u0437\u0438\u0442\u043e\u0432') if payment_data else '\u041e\u0448\u0438\u0431\u043a\u0430 \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u0438\u044f \u0440\u0435\u043a\u0432\u0438\u0437\u0438\u0442\u043e\u0432'
             app.logger.info(f"Sending error message: {error_msg}")
-            send_message(chat_id, f"\u274c \u041e\u0448\u0438\u0431\u043a\u0430! {error_msg}")
+            send_message_with_cleanup(chat_id, f"\u274c \u041e\u0448\u0438\u0431\u043a\u0430! {error_msg}")
             
     except ValueError:
-        send_message(chat_id, "\u274c \u041f\u043e\u0436\u0430\u043b\u0443\u0439\u0441\u0442\u0430, \u0432\u0432\u0435\u0434\u0438\u0442\u0435 \u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u0443\u044e \u0441\u0443\u043c\u043c\u0443 (\u043d\u0430\u043f\u0440\u0438\u043c\u0435\u0440: 1500 \u0438\u043b\u0438 2500)")
+        send_message_with_cleanup(chat_id, "\u274c \u041f\u043e\u0436\u0430\u043b\u0443\u0439\u0441\u0442\u0430, \u0432\u0432\u0435\u0434\u0438\u0442\u0435 \u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u0443\u044e \u0441\u0443\u043c\u043c\u0443 (\u043d\u0430\u043f\u0440\u0438\u043c\u0435\u0440: 1500 \u0438\u043b\u0438 2500)")
     except Exception as e:
         app.logger.error(f"Error handling amount input: {e}")
         app.logger.error(f"Exception type: {type(e)}")
         app.logger.error(f"Exception args: {e.args}")
         import traceback
         app.logger.error(f"Traceback: {traceback.format_exc()}")
-        send_message(chat_id, "\u274c \u041f\u0440\u043e\u0438\u0437\u043e\u0448\u043b\u0430 \u043e\u0448\u0438\u0431\u043a\u0430. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0435\u0449\u0435 \u0440\u0430\u0437.")
+        send_message_with_cleanup(chat_id, "\u274c \u041f\u0440\u043e\u0438\u0437\u043e\u0448\u043b\u0430 \u043e\u0448\u0438\u0431\u043a\u0430. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0435\u0449\u0435 \u0440\u0430\u0437.")
 
 def send_message(chat_id, text):
     app.logger.info(f"Sending message to {chat_id}: message length {len(text)}")
@@ -244,8 +244,57 @@ def send_message(chat_id, text):
         
         if response.status_code != 200:
             app.logger.error(f"Telegram API error: {response.text}")
+            return None
+        
+        return response.json()
     except Exception as e:
         app.logger.error(f"Error sending message: {e}")
+        return None
+
+def delete_message(chat_id, message_id):
+    """Удаляет сообщение по ID"""
+    try:
+        url = f"https://api.telegram.org/bot{TOKEN}/deleteMessage"
+        data = {
+            "chat_id": chat_id,
+            "message_id": message_id
+        }
+        response = requests.post(url, json=data, timeout=10)
+        if response.status_code == 200:
+            app.logger.info(f"Message {message_id} deleted successfully")
+        else:
+            app.logger.warning(f"Failed to delete message {message_id}: {response.text}")
+    except Exception as e:
+        app.logger.error(f"Error deleting message {message_id}: {e}")
+
+def send_message_with_cleanup(chat_id, text, delete_previous=True):
+    """Отправляет сообщение и удаляет предыдущее для чистого диалога"""
+    # Получаем последние сообщения бота
+    if delete_previous:
+        try:
+            url = f"https://api.telegram.org/bot{TOKEN}/getUpdates"
+            response = requests.get(url, timeout=10)
+            if response.status_code == 200:
+                updates = response.json().get('result', [])
+                # Ищем последние сообщения от бота в этом чате
+                bot_messages = []
+                for update in updates[-10:]:  # Проверяем последние 10 обновлений
+                    if 'message' in update:
+                        msg = update['message']
+                        if msg.get('chat', {}).get('id') == chat_id:
+                            # Проверяем, есть ли информация о том, что сообщение от бота
+                            if 'from' in msg and msg['from'].get('is_bot', False):
+                                bot_messages.append(msg['message_id'])
+                
+                # Удаляем последние 2-3 сообщения бота (оставляем только текущее)
+                for msg_id in bot_messages[-3:]:
+                    delete_message(chat_id, msg_id)
+                    time.sleep(0.1)  # Небольшая задержка между удалениями
+        except Exception as e:
+            app.logger.error(f"Error in cleanup: {e}")
+    
+    # Отправляем новое сообщение
+    return send_message(chat_id, text)
 
 def save_order_to_file(payment_data, chat_id, amount):
     try:
